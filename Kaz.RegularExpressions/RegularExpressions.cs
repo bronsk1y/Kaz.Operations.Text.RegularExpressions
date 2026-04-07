@@ -286,7 +286,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// </summary>
         /// <param name="factory">A factory function that returns a configured <see cref="RegexCharset"/>.</param>
         /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
-        public RegexBuilder Group(Func<RegexCharset> factory) => Append(factory().Build(), true);
+        public RegexBuilder Charset(Func<RegexCharset> factory) => Append(factory().Build(), true);
 
         /// <summary>
         /// Compiles the current pattern into a <see cref="Regex"/> instance.
@@ -300,6 +300,32 @@ namespace Kaz.Operations.Text.RegularExpressions
             else throw new InvalidOperationException("Builder pattern value cannot be empty.");
         }
 
+        /// <summary>
+        /// Compiles the current pattern into a <see cref="Regex"/> instance using provided options.
+        /// </summary>
+        /// <param name="options">A <see cref="RegexOptions"></see> to apply to the compiled regular expression.</param>
+        /// <returns>A compiled <see cref="Regex"/> for the current pattern with the applied options.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the pattern is empty.</exception>
+        public Regex Build(RegexOptions options)
+        {
+            if (Value.Length > 0)
+                return new Regex(Value, options);
+            else throw new InvalidOperationException("Builder pattern value cannot be empty.");
+        }
+
+        /// <summary>
+        /// Compiles the current pattern into a <see cref="Regex"/> instance using provided options and a timeout interval.
+        /// </summary>
+        /// <param name="options">A <see cref="RegexOptions"></see> to apply to the compiled regular expression.</param>
+        /// <param name="matchTimeout">A timeout interval that defines the maximum duration for a match to be found.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown when the pattern is empty.</exception>
+        public Regex Build(RegexOptions options, TimeSpan matchTimeout)
+        {
+            if (Value.Length > 0)
+                return new Regex(Value, options, matchTimeout);
+            else throw new InvalidOperationException("Builder pattern value cannot be empty.");
+        }
     }
 
     /// <summary>
@@ -563,7 +589,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         }
 
         /// <summary>
-        /// Appends an alternation operator (<c>|</c>) to allow matching either the preceding or the following pattern.
+        /// Appends an alternation operator to allow matching either the preceding or the following pattern.
         /// </summary>
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
         /// <exception cref="InvalidOperationException">Thrown when the group is empty or already ends with an alternation operator.</exception>
@@ -586,6 +612,13 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <param name="factory">A factory function that returns a configured <see cref="RegexCharset"/>.</param>
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
         public RegexGroup Charset(Func<RegexCharset> factory) => Append(factory().Build(), true);
+
+        /// <summary>
+        /// Appends a regex group built by the provided <see cref="RegexGroup"/> factory.
+        /// </summary>
+        /// <param name="factory">A factory function that returns a configured <see cref="RegexCharset"/>.</param>
+        /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
+        public RegexGroup Group(Func<RegexGroup> factory) => Append(factory().Build(), false);
 
         /// <summary>
         /// Builds the group pattern string wrapped in the group syntax defined by its type.
