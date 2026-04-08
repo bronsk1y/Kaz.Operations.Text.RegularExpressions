@@ -9,7 +9,7 @@
 
 	<PropertyGroup>
 		<PackageId>Kaz.Operations.Text.RegularExpressions</PackageId>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
 		<Authors>Bronsk1y</Authors>
 		<Description>
 			Extends the working field for Kaz.Operations.Text by adding a fluent API builder for Regular Expressions.

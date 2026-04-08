@@ -19,6 +19,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         private RegexBuilder Append(string part, bool canQuantify)
         {
             Value += part;
+            LastElement = part;
             CanApplyQuantifier = canQuantify;
             return this;
         }
@@ -29,8 +30,16 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
         public RegexBuilder Start()
         {
-            Value = "^" + Value;
-            CanApplyQuantifier = false;
+            if (string.IsNullOrEmpty(Value))
+            {
+                Value = "^";
+                CanApplyQuantifier = false;
+            }
+            else
+            {
+                throw new InvalidOperationException("Start anchor must be placed first.");
+            }
+
             return this;
         }
 
@@ -265,6 +274,20 @@ namespace Kaz.Operations.Text.RegularExpressions
         }
 
         /// <summary>
+        /// Makes the preceding quantifier lazy, that makes it match less characters. 
+        /// </summary>
+        /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when a quantifier has already been made lazy or previous element is not a quantifier.</exception>
+        public RegexBuilder Lazy()
+        {
+            if (LastElement.Equals("?") || LastElement.Equals("+") || LastElement.Equals("*"))
+                Append("?", false);
+            else throw new InvalidOperationException("Previous quantifier is already lazy or previous element is not a quantifier.");
+
+            return this;
+        }
+
+        /// <summary>
         /// Anchors the match to the end of the string.
         /// </summary>
         /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
@@ -354,6 +377,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         private RegexGroup Append(string part, bool canQuantify)
         {
             Value += part;
+            LastElement = part;
             CanApplyQuantifier = canQuantify;
             return this;
         }
@@ -589,6 +613,20 @@ namespace Kaz.Operations.Text.RegularExpressions
         }
 
         /// <summary>
+        /// Makes the preceding quantifier lazy, that makes it match less characters. 
+        /// </summary>
+        /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when a quantifier has already been made lazy or previous element is not a quantifier.</exception>
+        public RegexGroup Lazy()
+        {
+            if (LastElement.Equals("?") || LastElement.Equals("+") || LastElement.Equals("*"))
+                Append("?", false);
+            else throw new InvalidOperationException("Previous quantifier is already lazy or previous element is not a quantifier.");
+
+            return this;
+        }
+
+        /// <summary>
         /// Appends an alternation operator to allow matching either the preceding or the following pattern.
         /// </summary>
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
@@ -618,7 +656,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// </summary>
         /// <param name="factory">A factory function that returns a configured <see cref="RegexCharset"/>.</param>
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
-        public RegexGroup Group(Func<RegexGroup> factory) => Append(factory().Build(), false);
+        public RegexGroup Group(Func<RegexGroup> factory) => Append(factory().Build(), true);
 
         /// <summary>
         /// Builds the group pattern string wrapped in the group syntax defined by its type.
