@@ -73,4 +73,18 @@
     }
 
     #endregion
+    internal static class RegexBuilderCore
+    {
+        internal static string GetUnicodeCategoryCode(UnicodeCategoryType category) => category switch
+        {
+            UnicodeCategoryType.Letter => "L",
+            UnicodeCategoryType.UppercaseLetter => "Lu",
+            UnicodeCategoryType.LowercaseLetter => "Ll",
+            UnicodeCategoryType.Number => "N",
+            UnicodeCategoryType.Punctuation => "P",
+            UnicodeCategoryType.Separator => "Z",
+            UnicodeCategoryType.Symbol => "S",
+            _ => throw new ArgumentException("This type is not supported.")
+        };
+    }
 }

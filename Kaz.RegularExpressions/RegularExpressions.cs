@@ -50,6 +50,18 @@ namespace Kaz.Operations.Text.RegularExpressions
         public RegexBuilder AbsoluteStart() => Append("\\A", false);
 
         /// <summary>
+        /// Anchors the match to the absolute end of the string.
+        /// </summary>
+        /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
+        public RegexBuilder AbsoluteEnd() => Append("\\z", false);
+
+        /// <summary>
+        /// Anchors the match to the absolute end of the string or a new-line symbol.
+        /// </summary>
+        /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
+        public RegexBuilder AbsoluteEndWithNewLine() => Append("\\Z", false);
+
+        /// <summary>
         /// Matches any single character except a newline.
         /// </summary>
         /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
@@ -152,7 +164,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
         /// <exception cref="ArgumentException">Thrown when <paramref name="category"/> is not supported.</exception>
         public RegexBuilder UnicodeCategory(UnicodeCategoryType category) =>
-            Append($"\\p{{{GetUnicodeCategoryCode(category)}}}", true);
+            Append($"\\p{{{RegexBuilderCore.GetUnicodeCategoryCode(category)}}}", true);
 
         /// <summary>
         /// Matches any character not belonging to the specified Unicode category.
@@ -161,19 +173,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <returns>The current <see cref="RegexBuilder"/> instance.</returns>
         /// <exception cref="ArgumentException">Thrown when <paramref name="category"/> is not supported.</exception>
         public RegexBuilder NonUnicodeCategory(UnicodeCategoryType category) =>
-            Append($"\\P{{{GetUnicodeCategoryCode(category)}}}", true);
-
-        private static string GetUnicodeCategoryCode(UnicodeCategoryType category) => category switch
-        {
-            UnicodeCategoryType.Letter => "L",
-            UnicodeCategoryType.UppercaseLetter => "Lu",
-            UnicodeCategoryType.LowercaseLetter => "Ll",
-            UnicodeCategoryType.Number => "N",
-            UnicodeCategoryType.Punctuation => "P",
-            UnicodeCategoryType.Separator => "Z",
-            UnicodeCategoryType.Symbol => "S",
-            _ => throw new ArgumentException("This type is not supported.")
-        };
+            Append($"\\P{{{RegexBuilderCore.GetUnicodeCategoryCode(category)}}}", true);
 
         /// <summary>
         /// Makes the preceding element optional.
@@ -185,6 +185,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += "?";
+                LastElement = "?";
                 CanApplyQuantifier = false;
             }
             else
@@ -204,6 +205,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += "+";
+                LastElement = "+";
                 CanApplyQuantifier = false;
             }
             else
@@ -223,6 +225,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += "*";
+                LastElement = "*";
                 CanApplyQuantifier = false;
             }
             else
@@ -243,6 +246,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += $"{{{value}}}";
+                LastElement = $"{{{value}}}";
                 CanApplyQuantifier = false;
             }
             else
@@ -264,6 +268,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += $"{{{min},{max}}}";
+                LastElement = $"{{{min},{max}}}";
                 CanApplyQuantifier = false;
             }
             else
@@ -280,9 +285,20 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <exception cref="InvalidOperationException">Thrown when a quantifier has already been made lazy or previous element is not a quantifier.</exception>
         public RegexBuilder Lazy()
         {
-            if (LastElement.Equals("?") || LastElement.Equals("+") || LastElement.Equals("*"))
+            bool isQuantifier = LastElement.Equals("?")
+                || LastElement.Equals("+")
+                || LastElement.Equals("*")
+                || (LastElement.StartsWith("{") && LastElement.EndsWith("}"));
+
+            if (isQuantifier)
+            {
                 Append("?", false);
-            else throw new InvalidOperationException("Previous quantifier is already lazy or previous element is not a quantifier.");
+                LastElement = "";
+            }
+            else
+            {
+                throw new InvalidOperationException("Previous quantifier is already lazy or previous element is not a quantifier.");
+            }
 
             return this;
         }
@@ -389,6 +405,18 @@ namespace Kaz.Operations.Text.RegularExpressions
         public RegexGroup AbsoluteStart() => Append("\\A", false);
 
         /// <summary>
+        /// Anchors the match to the absolute end of the string.
+        /// </summary>
+        /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
+        public RegexGroup AbsoluteEnd() => Append("\\z", false);
+
+        /// <summary>
+        /// Anchors the match to the absolute end of the string or a new-line symbol.
+        /// </summary>
+        /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
+        public RegexGroup AbsoluteEndWithNewLine() => Append("\\Z", false);
+
+        /// <summary>
         /// Matches any single character except a newline.
         /// </summary>
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
@@ -491,7 +519,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
         /// <exception cref="ArgumentException">Thrown when <paramref name="category"/> is not supported.</exception>
         public RegexGroup UnicodeCategory(UnicodeCategoryType category) =>
-            Append($"\\p{{{GetUnicodeCategoryCode(category)}}}", true);
+            Append($"\\p{{{RegexBuilderCore.GetUnicodeCategoryCode(category)}}}", true);
 
         /// <summary>
         /// Matches any character not belonging to the specified Unicode category.
@@ -500,19 +528,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
         /// <exception cref="ArgumentException">Thrown when <paramref name="category"/> is not supported.</exception>
         public RegexGroup NonUnicodeCategory(UnicodeCategoryType category) =>
-            Append($"\\P{{{GetUnicodeCategoryCode(category)}}}", true);
-
-        private static string GetUnicodeCategoryCode(UnicodeCategoryType category) => category switch
-        {
-            UnicodeCategoryType.Letter => "L",
-            UnicodeCategoryType.UppercaseLetter => "Lu",
-            UnicodeCategoryType.LowercaseLetter => "Ll",
-            UnicodeCategoryType.Number => "N",
-            UnicodeCategoryType.Punctuation => "P",
-            UnicodeCategoryType.Separator => "Z",
-            UnicodeCategoryType.Symbol => "S",
-            _ => throw new ArgumentException("This type is not supported.")
-        };
+            Append($"\\P{{{RegexBuilderCore.GetUnicodeCategoryCode(category)}}}", true);
 
         /// <summary>
         /// Makes the preceding element optional.
@@ -524,6 +540,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += "?";
+                LastElement = "?";
                 CanApplyQuantifier = false;
             }
             else
@@ -543,6 +560,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += "+";
+                LastElement = "+";
                 CanApplyQuantifier = false;
             }
             else
@@ -562,6 +580,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += "*";
+                LastElement = "*";
                 CanApplyQuantifier = false;
             }
             else
@@ -582,6 +601,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += $"{{{value}}}";
+                LastElement = $"{{{value}}}";
                 CanApplyQuantifier = false;
             }
             else
@@ -603,6 +623,7 @@ namespace Kaz.Operations.Text.RegularExpressions
             if (CanApplyQuantifier)
             {
                 Value += $"{{{min},{max}}}";
+                LastElement = $"{{{min},{max}}}";
                 CanApplyQuantifier = false;
             }
             else
@@ -619,9 +640,20 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <exception cref="InvalidOperationException">Thrown when a quantifier has already been made lazy or previous element is not a quantifier.</exception>
         public RegexGroup Lazy()
         {
-            if (LastElement.Equals("?") || LastElement.Equals("+") || LastElement.Equals("*"))
+            bool isQuantifier = LastElement.Equals("?")
+                || LastElement.Equals("+")
+                || LastElement.Equals("*")
+                || (LastElement.StartsWith("{") && LastElement.EndsWith("}"));
+
+            if (isQuantifier)
+            {
                 Append("?", false);
-            else throw new InvalidOperationException("Previous quantifier is already lazy or previous element is not a quantifier.");
+                LastElement = "";
+            }
+            else
+            {
+                throw new InvalidOperationException("Previous quantifier is already lazy or previous element is not a quantifier.");
+            }
 
             return this;
         }
@@ -654,7 +686,7 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// <summary>
         /// Appends a regex group built by the provided <see cref="RegexGroup"/> factory.
         /// </summary>
-        /// <param name="factory">A factory function that returns a configured <see cref="RegexCharset"/>.</param>
+        /// <param name="factory">A factory function that returns a configured <see cref="RegexGroup"/>.</param>
         /// <returns>The current <see cref="RegexGroup"/> instance.</returns>
         public RegexGroup Group(Func<RegexGroup> factory) => Append(factory().Build(), true);
 
@@ -711,6 +743,66 @@ namespace Kaz.Operations.Text.RegularExpressions
         /// Gets or sets a value indicating whether the character class is negated.
         /// </summary>
         public bool Negate { get; set; } = false;
+
+        private RegexCharset Append(string part)
+        {
+            Value += part;
+            return this;
+        }
+
+        /// <summary>
+        /// Matches any decimal digit.
+        /// </summary>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        public RegexCharset Digit() => Append("\\d");
+
+        /// <summary>
+        /// Matches any character that is not a decimal digit.
+        /// </summary>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        public RegexCharset NonDigit() => Append("\\D");
+
+        /// <summary>
+        /// Matches any word character.
+        /// </summary>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        public RegexCharset Word() => Append("\\w");
+
+        /// <summary>
+        /// Matches any non-word character.
+        /// </summary>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        public RegexCharset NonWord() => Append("\\W");
+
+        /// <summary>
+        /// Matches any whitespace character.
+        /// </summary>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        public RegexCharset Whitespace() => Append("\\s");
+
+        /// <summary>
+        /// Matches any non-whitespace character.
+        /// </summary>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        public RegexCharset NonWhitespace() => Append("\\S");
+
+        /// <summary>
+        /// Matches any character belonging to the specified Unicode category.
+        /// </summary>
+        /// <param name="category">The Unicode category to match.</param>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="category"/> is not supported.</exception>
+        public RegexCharset UnicodeCategory(UnicodeCategoryType category) =>
+            Append($"\\p{{{RegexBuilderCore.GetUnicodeCategoryCode(category)}}}");
+
+        /// <summary>
+        /// Matches any character not belonging to the specified Unicode category.
+        /// </summary>
+        /// <param name="category">The Unicode category to exclude.</param>
+        /// <returns>The current <see cref="RegexCharset"/> instance.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="category"/> is not supported.</exception>
+        public RegexCharset NonUnicodeCategory(UnicodeCategoryType category) =>
+            Append($"\\P{{{RegexBuilderCore.GetUnicodeCategoryCode(category)}}}");
 
         /// <summary>
         /// Adds a character range to the character class.
